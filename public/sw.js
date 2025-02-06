@@ -1,6 +1,5 @@
 const CACHE_NAME = 'familance-v1';
 
-// Arquivos para cache inicial
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -8,6 +7,11 @@ const urlsToCache = [
   '/icon-512x512.png',
   '/apple-icon-180.png'
 ];
+
+function isValidUrl(url) {
+  const urlObj = new URL(url);
+  return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -17,28 +21,29 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  if (!isValidUrl(event.request.url)) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        // Cache hit - retorna resposta do cache
         if (response) {
           return response;
         }
-
-        // Não encontrado no cache - busca na rede
         return fetch(event.request).then(
           (response) => {
-            // Verifica se é uma resposta válida
-            if(!response || response.status !== 200 || response.type !== 'basic') {
+            if (!response || response.status !== 200 || response.type !== 'basic') {
               return response;
             }
 
-            // Clone a resposta
             const responseToCache = response.clone();
 
             caches.open(CACHE_NAME)
               .then((cache) => {
-                cache.put(event.request, responseToCache);
+                if (isValidUrl(event.request.url)) {
+                  cache.put(event.request, responseToCache);
+                }
               });
 
             return response;
@@ -48,7 +53,6 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Limpa caches antigos quando uma nova versão é ativada
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
