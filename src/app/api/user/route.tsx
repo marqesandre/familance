@@ -8,7 +8,7 @@ export async function GET() {
   try {
     const data = await fs.readFile(dataFilePath, 'utf-8');
     return NextResponse.json(JSON.parse(data));
-  } catch (error) {
+  } catch {
     return NextResponse.json(null, { status: 500 });
   }
 }

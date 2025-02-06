@@ -8,7 +8,7 @@ import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 export default function Home() {
   const [isClient, setIsClient] = useState(false);
   const [isBalanceVisible, setIsBalanceVisible] = useState(false);
-  const { user, monthlyBalance, transactions } = useTransactions();
+  const { user, monthlyBalance } = useTransactions();
   const thisMonth = new Date().toLocaleString("pt-BR", { month: "long" });
 
   useEffect(() => {

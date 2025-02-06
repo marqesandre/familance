@@ -12,7 +12,7 @@ export default function Transactions() {
   const [isClient, setIsClient] = useState(false);
   const { monthlyBalance, transactions, addTransaction, updateTransaction, deleteTransaction } = useTransactions();
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedYear] = useState(new Date().getFullYear());
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
