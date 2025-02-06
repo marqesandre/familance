@@ -16,9 +16,14 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const transactions = await request.json();
-    await fs.writeFile(dataFilePath, JSON.stringify(transactions, null, 2));
+    await fs.writeFile(dataFilePath, JSON.stringify(transactions));
+
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ success: false }, { status: 500 });
+  } catch (error) {
+    console.error('API Error:', error);
+    return NextResponse.json(
+      { message: 'Internal Server Error' },
+      { status: 500 }
+    );
   }
 }

@@ -21,6 +21,11 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // Não intercepta requisições POST
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   if (!isValidUrl(event.request.url)) {
     return;
   }

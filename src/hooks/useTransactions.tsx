@@ -61,14 +61,16 @@ export function useTransactions() {
         body: JSON.stringify(updatedTransactions),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Failed to save transactions');
+        throw new Error(data.message || 'Failed to save transactions');
       }
 
       return true;
     } catch (error) {
       console.error('Error saving transactions:', error);
-      setError(error as Error);
+      setError(error instanceof Error ? error : new Error('Unknown error'));
       return false;
     }
   };
