@@ -3,10 +3,11 @@ import { Transaction } from '../types';
 
 interface AddTransactionModalProps {
   onClose: () => void;
-  onAdd: (transaction: Transaction) => void;
+  onAdd: (transaction: Transaction) => Promise<void>;
 }
 
 export function AddTransactionModal({ onClose, onAdd }: AddTransactionModalProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState<Omit<Transaction, 'id'>>({
     description: '',
     amount: 0,
@@ -14,24 +15,51 @@ export function AddTransactionModal({ onClose, onAdd }: AddTransactionModalProps
     type: 'income'
   });
 
+
+  const formatCurrency = (value: string) => {
+    const numbers = value.replace(/[^\d.]/g, '');
+    
+    const amount = Number(numbers).toFixed(2);
+    
+    return amount === 'NaN' ? '0.00' : amount;
+  };
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCurrency(e.target.value);
+    setForm(prev => ({ ...prev, amount: Number(formatted) }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (isSubmitting) return;
+    
+    try {
+      setIsSubmitting(true);
+      await onAdd({
+        ...form,
+        id: crypto.randomUUID()
+      });
+      onClose();
+    } catch (error) {
+      console.error('Error adding transaction:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
       <div className="bg-neutral-800 rounded-lg p-6 w-full max-w-md">
         <h2 className="text-xl font-bold mb-4">Nova Transação</h2>
         
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          onAdd({
-            ...form,
-            id: crypto.randomUUID()
-          });
-        }} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Descrição</label>
             <input
               type="text"
               value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))}
               className="w-full p-2 border rounded-3xl bg-inherit border-neutral-600 text-white"
               required
             />
@@ -41,10 +69,13 @@ export function AddTransactionModal({ onClose, onAdd }: AddTransactionModalProps
             <label className="block text-sm font-medium mb-1">Valor</label>
             <input
               type="number"
-              value={form.amount}
-              onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })}
+              value={form.amount || ''}
+              onChange={handleAmountChange}
+              onFocus={(e) => e.target.select()}
               className="w-full p-2 border rounded-3xl bg-inherit border-neutral-600 text-white"
               step="0.01"
+              min="0"
+              placeholder="0.00"
               required
             />
           </div>
@@ -77,15 +108,17 @@ export function AddTransactionModal({ onClose, onAdd }: AddTransactionModalProps
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 hover:bg-neutral-700 rounded-md"
+              disabled={isSubmitting}
+              className="px-4 py-2 hover:bg-neutral-700 rounded-md disabled:opacity-50"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              disabled={isSubmitting}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:hover:bg-green-600"
             >
-              Adicionar
+              {isSubmitting ? 'Adicionando...' : 'Adicionar'}
             </button>
           </div>
         </form>
