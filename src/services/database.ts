@@ -68,7 +68,7 @@ export const DatabaseService = {
     if (!data) return [];
 
     return Object.entries(data)
-      .filter(([_, transaction]) => {
+      .filter(([, transaction]) => {
         const txDate = (transaction as Transaction).date;
         return txDate >= startDate && txDate <= endDate;
       })
