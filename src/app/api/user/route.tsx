@@ -1,14 +1,20 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
-
-const dataFilePath = path.join(process.cwd(), 'public/data/user.json');
+import { db } from '@/config/firebase';
+import { ref, get } from 'firebase/database';
 
 export async function GET() {
   try {
-    const data = await fs.readFile(dataFilePath, 'utf-8');
-    return NextResponse.json(JSON.parse(data));
-  } catch {
+    const userRef = ref(db, 'user');
+    const snapshot = await get(userRef);
+    const data = snapshot.val();
+    
+    if (!data) {
+      return NextResponse.json(null, { status: 404 });
+    }
+    
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error('API Error:', error);
     return NextResponse.json(null, { status: 500 });
   }
 }

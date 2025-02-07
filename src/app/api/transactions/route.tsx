@@ -1,14 +1,31 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
+import { db } from '@/config/firebase';
+import { ref, get, set } from 'firebase/database';
 
-const dataFilePath = path.join(process.cwd(), 'public/data/transactions.json');
+interface Transaction {
+  amount: number;
+  description: string;
+  date: string;
+  category: string;
+  type: 'income' | 'expense';
+}
 
 export async function GET() {
   try {
-    const data = await fs.readFile(dataFilePath, 'utf-8');
-    return NextResponse.json(JSON.parse(data));
-  } catch {
+    const transactionsRef = ref(db, 'transactions');
+    const snapshot = await get(transactionsRef);
+    const data = snapshot.val();
+    
+    if (!data) return NextResponse.json([]);
+    
+    const transactions = Object.entries(data).map(([id, transaction]) => ({
+      id,
+      ...(transaction as Transaction)
+    }));
+    
+    return NextResponse.json(transactions);
+  } catch (error) {
+    console.error('API Error:', error);
     return NextResponse.json([], { status: 500 });
   }
 }
@@ -16,7 +33,8 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const transactions = await request.json();
-    await fs.writeFile(dataFilePath, JSON.stringify(transactions));
+    const transactionsRef = ref(db, 'transactions');
+    await set(transactionsRef, transactions);
 
     return NextResponse.json({ success: true });
   } catch (error) {
